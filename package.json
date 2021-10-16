@@ -2,10 +2,12 @@
     "name": "vscode-l",
     "displayName": "l",
     "description": "l language support",
-    "version": "0.0.1",
+    "version": "0.0.0",
     "engines": {
         "vscode": "^1.61.0"
     },
+    "author": "Jack Lu <jacklu@jacklu.me>",
+    "license": "ISC",
     "categories": [
         "Programming Languages"
     ],
