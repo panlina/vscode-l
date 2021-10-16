@@ -13,7 +13,7 @@
 		"keywords": {
 			"patterns": [{
 				"name": "keyword.control.l",
-				"match": "\\b(if|while|for|return)\\b"
+				"match": "\\b(let|var|goto|while|do|break)\\b"
 			}]
 		},
 		"strings": {
