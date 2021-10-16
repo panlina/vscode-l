@@ -6,6 +6,9 @@
 			"include": "#keywords"
 		},
 		{
+			"include": "#numbers"
+		},
+		{
 			"include": "#strings"
 		}
 	],
@@ -15,6 +18,10 @@
 				"name": "keyword.control.l",
 				"match": "\\b(let|var|goto|while|do|break)\\b"
 			}]
+		},
+		"numbers": {
+			"name": "constant.numeric.l",
+			"match": "\\b[0-9]+\\b"
 		},
 		"strings": {
 			"name": "string.quoted.double.l",
