@@ -1,0 +1,25 @@
+{
+    "name": "vscode-l",
+    "displayName": "l",
+    "description": "l language support",
+    "version": "0.0.1",
+    "engines": {
+        "vscode": "^1.61.0"
+    },
+    "categories": [
+        "Programming Languages"
+    ],
+    "contributes": {
+        "languages": [{
+            "id": "l",
+            "aliases": ["l", "l"],
+            "extensions": [".l"],
+            "configuration": "./language-configuration.json"
+        }],
+        "grammars": [{
+            "language": "l",
+            "scopeName": "source.l",
+            "path": "./syntaxes/l.tmLanguage.json"
+        }]
+    }
+}
