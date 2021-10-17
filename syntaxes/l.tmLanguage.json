@@ -16,7 +16,10 @@
 		"keywords": {
 			"patterns": [{
 				"name": "keyword.control.l",
-				"match": "\\b(let|var|goto|while|do|break)\\b"
+				"match": "\\b(let|goto|while|do|break)\\b"
+			}, {
+				"name": "storage.type.l",
+				"match": "\\bvar\\b"
 			}]
 		},
 		"numbers": {
