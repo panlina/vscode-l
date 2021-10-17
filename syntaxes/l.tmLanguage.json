@@ -10,6 +10,9 @@
 		},
 		{
 			"include": "#strings"
+		},
+		{
+			"include": "#operators"
 		}
 	],
 	"repository": {
@@ -36,6 +39,10 @@
 					"match": "\\\\."
 				}
 			]
+		},
+		"operators": {
+			"name": "keyword.operator.l",
+			"match": "\\b(\\+|-|\\*|/|<=|=|>=|<|!=|>|!|&|\\||\\.|@)\\b"
 		}
 	},
 	"scopeName": "source.l"
