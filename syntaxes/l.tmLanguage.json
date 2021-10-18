@@ -13,6 +13,9 @@
 		},
 		{
 			"include": "#operators"
+		},
+		{
+			"include": "#conditional-expression"
 		}
 	],
 	"repository": {
@@ -43,6 +46,20 @@
 		"operators": {
 			"name": "keyword.operator.l",
 			"match": "\\b(\\+|-|\\*|/|<=|=|>=|<|!=|>|!|&|\\||\\.|@)\\b"
+		},
+		"conditional-expression": {
+			"begin": "\\?",
+			"beginCaptures": {
+				"0": {
+					"name": "keyword.operator.l"
+				}
+			},
+			"end": ":",
+			"endCaptures": {
+				"0": {
+					"name": "keyword.operator.l"
+				}
+			}
 		}
 	},
 	"scopeName": "source.l"
