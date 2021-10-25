@@ -16,6 +16,12 @@
 		},
 		{
 			"include": "#conditional-expression"
+		},
+		{
+			"include": "#punctuation-comma"
+		},
+		{
+			"include": "#punctuation-semicolon"
 		}
 	],
 	"repository": {
@@ -60,6 +66,14 @@
 					"name": "keyword.operator.l"
 				}
 			}
+		},
+		"punctuation-comma": {
+			"name": "punctuation.separator.comma.l",
+			"match": ","
+		},
+		"punctuation-semicolon": {
+			"name": "punctuation.terminator.statement.l",
+			"match": ";"
 		}
 	},
 	"scopeName": "source.l"
