@@ -12,6 +12,12 @@
 			"include": "#strings"
 		},
 		{
+			"include": "#false"
+		},
+		{
+			"include": "#true"
+		},
+		{
 			"include": "#operators"
 		},
 		{
@@ -43,6 +49,14 @@
 		"numbers": {
 			"name": "constant.numeric.l",
 			"match": "\\b[0-9]+\\b"
+		},
+		"false": {
+			"name": "constant.language.boolean.false.l",
+			"match": "#false\\b"
+		},
+		"true": {
+			"name": "constant.language.boolean.true.l",
+			"match": "#true\\b"
 		},
 		"strings": {
 			"name": "string.quoted.double.l",
