@@ -18,6 +18,12 @@
 			"include": "#true"
 		},
 		{
+			"include": "#null"
+		},
+		{
+			"include": "#undefined"
+		},
+		{
 			"include": "#operators"
 		},
 		{
@@ -57,6 +63,14 @@
 		"true": {
 			"name": "constant.language.boolean.true.l",
 			"match": "#true\\b"
+		},
+		"null": {
+			"name": "constant.language.boolean.null.l",
+			"match": "#null\\b"
+		},
+		"undefined": {
+			"name": "constant.language.boolean.undefined.l",
+			"match": "#undefined\\b"
 		},
 		"strings": {
 			"name": "string.quoted.double.l",
