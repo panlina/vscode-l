@@ -1,12 +1,12 @@
 import * as vscode from 'vscode';
-import { Environment, Scope, Expression, parse, programAt, analyze } from 'l';
+import { Expression, programAt } from 'l';
+import documentProgram from './documentProgram';
 
 export function activateHover(context: vscode.ExtensionContext) {
 	vscode.languages.registerHoverProvider('l', {
 		provideHover(document, position, token) {
-			try { var program = parse(document.getText()); }
+			try { var program = documentProgram.get(document); }
 			catch (e) { return; }
-			analyze(program, new Environment(new Scope({})));
 			var target = programAt(program, document.offsetAt(position));
 			if (target instanceof Expression && target.type == 'name')
 				if (target.environment) {

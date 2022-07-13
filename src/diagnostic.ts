@@ -1,5 +1,6 @@
 import * as vscode from 'vscode';
-import { parse } from 'l';
+import { Environment, Scope, parse, analyze } from 'l';
+import documentProgram from './documentProgram';
 
 export function activateDiagnostic(context: vscode.ExtensionContext) {
 	const diagnostics = vscode.languages.createDiagnosticCollection('l');
@@ -19,16 +20,20 @@ export function activateDiagnostic(context: vscode.ExtensionContext) {
 				diagnose(e.document);
 	});
 	vscode.workspace.onDidCloseTextDocument(document => {
-		if (document.languageId == 'l')
+		if (document.languageId == 'l') {
+			documentProgram.delete(document);
 			diagnostics.delete(document.uri);
+		}
 	});
 
 	function diagnose(document: vscode.TextDocument) {
 		try { var program = parse(document.getText()); }
 		catch (e) { var error = e; }
-		if (program)
+		documentProgram.set(document, program);
+		if (program) {
+			analyze(program, new Environment(new Scope({})));
 			diagnostics.set(document.uri, []);
-		else {
+		} else {
 			var [, line, col, message] = error.matchResult.shortMessage.match(/^Line (\d+), col (\d+): (.*)$/);
 			var line = +line, col = +col;
 			var position = new vscode.Position(line - 1, col - 1);
