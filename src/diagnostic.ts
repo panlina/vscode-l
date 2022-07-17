@@ -34,8 +34,7 @@ export function activateDiagnostic(context: vscode.ExtensionContext) {
 			analyze(program, new Environment(new Scope({})));
 			diagnostics.set(document.uri, []);
 		} else {
-			var [, line, col, message] = error!.matchResult.shortMessage!.match(/^Line (\d+), col (\d+): (.*)$/);
-			var line = +line, col = +col;
+			var [line, col, message] = parseErrorMessage(error!.matchResult.shortMessage!);
 			var position = new vscode.Position(line - 1, col - 1);
 			var diagnostic = new vscode.Diagnostic(
 				new vscode.Range(position, position.translate(undefined, 1)),
@@ -43,6 +42,10 @@ export function activateDiagnostic(context: vscode.ExtensionContext) {
 				vscode.DiagnosticSeverity.Error
 			);
 			diagnostics.set(document.uri, [diagnostic]);
+		}
+		function parseErrorMessage(message: string) {
+			var [, line, col, message] = message.match(/^Line (\d+), col (\d+): (.*)$/)!;
+			return [+line, +col, message] as [number, number, string];
 		}
 	}
 };
