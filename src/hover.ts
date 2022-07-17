@@ -5,7 +5,7 @@ import documentProgram from './documentProgram';
 export function activateHover(context: vscode.ExtensionContext) {
 	vscode.languages.registerHoverProvider('l', {
 		provideHover(document, position, token) {
-			var program = documentProgram.get(document);
+			var program = documentProgram.get(document)!;
 			var target = programAt(program, document.offsetAt(position));
 			if (target instanceof Expression && target.type == 'name')
 				if (target.environment) {

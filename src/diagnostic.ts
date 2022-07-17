@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { Environment, Scope, parse, analyze } from 'l';
+import { Environment, Scope, Program, parse, analyze } from 'l';
 import documentProgram from './documentProgram';
 
 export function activateDiagnostic(context: vscode.ExtensionContext) {
@@ -27,7 +27,7 @@ export function activateDiagnostic(context: vscode.ExtensionContext) {
 	});
 
 	function diagnose(document: vscode.TextDocument) {
-		try { var program = parse(document.getText()); }
+		try { var program: Program | undefined = parse(document.getText()); }
 		catch (e) { var error = e; }
 		documentProgram.set(document, program);
 		if (program) {
