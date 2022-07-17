@@ -7,7 +7,7 @@ export function activateHover(context: vscode.ExtensionContext) {
 		provideHover(document, position, token) {
 			var program = documentProgram.get(document)!;
 			var target = programAt(program, document.offsetAt(position));
-			if (target instanceof Expression && target.type == 'name')
+			if (target instanceof Expression.Name)
 				if (target.environment) {
 					var resolution = target.environment.resolve(target.identifier);
 					if (resolution)
