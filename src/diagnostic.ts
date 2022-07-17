@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { Environment, Scope, Program, parse, analyze } from 'l';
+import { Environment, Scope, Program, parse, analyze, ParseError } from 'l';
 import documentProgram from './documentProgram';
 
 export function activateDiagnostic(context: vscode.ExtensionContext) {
@@ -28,13 +28,13 @@ export function activateDiagnostic(context: vscode.ExtensionContext) {
 
 	function diagnose(document: vscode.TextDocument) {
 		try { var program: Program | undefined = parse(document.getText()); }
-		catch (e) { var error = e; }
+		catch (e) { var error: ParseError | undefined = <ParseError>e; }
 		documentProgram.set(document, program);
 		if (program) {
 			analyze(program, new Environment(new Scope({})));
 			diagnostics.set(document.uri, []);
 		} else {
-			var [, line, col, message] = error.matchResult.shortMessage.match(/^Line (\d+), col (\d+): (.*)$/);
+			var [, line, col, message] = error!.matchResult.shortMessage!.match(/^Line (\d+), col (\d+): (.*)$/);
 			var line = +line, col = +col;
 			var position = new vscode.Position(line - 1, col - 1);
 			var diagnostic = new vscode.Diagnostic(
