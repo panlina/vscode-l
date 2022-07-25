@@ -10,12 +10,14 @@ export function activateHover(context: vscode.ExtensionContext) {
 			if (target instanceof Expression.Name)
 				if (target.environment) {
 					var resolution = target.environment.resolve(target.identifier);
-					if (resolution)
+					if (resolution) {
+						var [type, depth] = resolution;
 						return {
 							contents: [
-								`local: ${target.identifier}`
+								`${type}: ${target.identifier}`
 							]
 						};
+					}
 				}
 		}
 	});
