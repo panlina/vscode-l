@@ -36,10 +36,10 @@
 			"include": "#punctuation-semicolon"
 		},
 		{
-			"include": "#array-literal"
+			"include": "#punctuation-bracket-square"
 		},
 		{
-			"include": "#tuple-literal"
+			"include": "#punctuation-bracket-curly"
 		}
 	],
 	"repository": {
@@ -109,45 +109,13 @@
 			"name": "punctuation.terminator.statement.l",
 			"match": ";"
 		},
-		"array-literal": {
-			"name": "meta.array.literal.l",
-			"begin": "\\[",
-			"beginCaptures": {
-				"0": {
-					"name": "meta.brace.square.l"
-				}
-			},
-			"end": "\\]",
-			"endCaptures": {
-				"0": {
-					"name": "meta.brace.square.l"
-				}
-			},
-			"patterns": [
-				{
-					"include": "#punctuation-comma"
-				}
-			]
+		"punctuation-bracket-square": {
+			"name": "meta.brace.square.l",
+			"match": "[\\[\\]]"
 		},
-		"tuple-literal": {
-			"name": "meta.tuple.literal.l",
-			"begin": "\\{",
-			"beginCaptures": {
-				"0": {
-					"name": "punctuation.definition.block.l"
-				}
-			},
-			"end": "\\}",
-			"endCaptures": {
-				"0": {
-					"name": "punctuation.definition.block.l"
-				}
-			},
-			"patterns": [
-				{
-					"include": "#punctuation-comma"
-				}
-			]
+		"punctuation-bracket-curly": {
+			"name": "punctuation.definition.block.l",
+			"match": "[{}]"
 		}
 	},
 	"scopeName": "source.l"
