@@ -6,6 +6,9 @@
 			"include": "#keywords"
 		},
 		{
+			"include": "#names"
+		},
+		{
 			"include": "#numbers"
 		},
 		{
@@ -51,6 +54,10 @@
 				"name": "storage.type.l",
 				"match": "\\bvar\\b"
 			}]
+		},
+		"names": {
+			"name": "variable.other.readwrite.l",
+			"match": "\\b[a-zA-Z_]\\w*\\b"
 		},
 		"numbers": {
 			"name": "constant.numeric.l",
