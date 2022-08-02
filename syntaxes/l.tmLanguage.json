@@ -85,7 +85,7 @@
 		},
 		"operators": {
 			"name": "keyword.operator.l",
-			"match": "\\+|-|\\*|/|<=|=|>=|<|!=|>|!|&|\\||\\.|@"
+			"match": "=>|\\+|-|\\*|/|<=|=|>=|<|!=|>|!|&|\\||\\.|@"
 		},
 		"conditional-expression": {
 			"begin": "\\?",
