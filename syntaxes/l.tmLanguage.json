@@ -39,6 +39,9 @@
 			"include": "#punctuation-semicolon"
 		},
 		{
+			"include": "#punctuation-colon"
+		},
+		{
 			"include": "#punctuation-bracket-square"
 		},
 		{
@@ -115,6 +118,10 @@
 		"punctuation-semicolon": {
 			"name": "punctuation.terminator.statement.l",
 			"match": ";"
+		},
+		"punctuation-colon": {
+			"name": "punctuation.separator.colon.l",
+			"match": ":"
 		},
 		"punctuation-bracket-square": {
 			"name": "meta.brace.square.l",
