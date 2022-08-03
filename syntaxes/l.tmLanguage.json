@@ -95,21 +95,7 @@
 		},
 		"operators": {
 			"name": "keyword.operator.l",
-			"match": "=>|\\+|-|\\*|/|<=|=|>=|<|!=|>|!|&|\\||\\.|@"
-		},
-		"conditional-expression": {
-			"begin": "\\?",
-			"beginCaptures": {
-				"0": {
-					"name": "keyword.operator.l"
-				}
-			},
-			"end": ":",
-			"endCaptures": {
-				"0": {
-					"name": "keyword.operator.l"
-				}
-			}
+			"match": "\\?|=>|\\+|-|\\*|/|<=|=|>=|<|!=|>|!|&|\\||\\.|@"
 		},
 		"punctuation-comma": {
 			"name": "punctuation.separator.comma.l",
