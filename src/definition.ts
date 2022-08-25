@@ -17,7 +17,7 @@ export function activateDefinition(context: vscode.ExtensionContext) {
 								document.positionAt(source.startIdx),
 								document.positionAt(source.endIdx)
 							)
-						)
+						);
 					}
 			}
 		})

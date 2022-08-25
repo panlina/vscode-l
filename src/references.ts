@@ -19,7 +19,7 @@ export function activateReferences(context: vscode.ExtensionContext) {
 								document.positionAt(source.endIdx)
 							)
 						);
-					})
+					});
 				}
 			}
 		})
