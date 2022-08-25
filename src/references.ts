@@ -8,7 +8,8 @@ export function activateReferences(context: vscode.ExtensionContext) {
 				var program = documentProgram.get(document)!;
 				var target = <Annotated<Expression | Statement>>programAt(program, document.offsetAt(position));
 				if (target instanceof Expression.Name) {
-					var references = [...findReferences(target)];
+					var definition = target.definition || target;
+					var references = [...findReferences(definition)];
 					return references.map(reference => {
 						var source = (<Annotated<Expression.Name>>reference).node.source;
 						return new vscode.Location(
