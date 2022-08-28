@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { Environment, Scope, Expression, Statement, Program, parse, analyze, ParseError, Annotated } from 'l';
+import { Environment, Scope, Expression, Statement, Program, parse, traverse, analyze, ParseError, Annotated } from 'l';
 import documentProgram from './documentProgram';
 
 export function activateDiagnostic(context: vscode.ExtensionContext) {
@@ -32,24 +32,18 @@ export function activateDiagnostic(context: vscode.ExtensionContext) {
 		documentProgram.set(document, program);
 		if (program) {
 			analyze(program, new Environment(new Scope({})));
-			diagnostics.set(document.uri, [...getErrors(program)].map(program => {
-				var annotated = <Annotated<Expression | Statement>>program;
-				var source = annotated.node.source;
-				return new vscode.Diagnostic(
-					new vscode.Range(document.positionAt(source.startIdx), document.positionAt(source.endIdx)),
-					annotated.error.message,
-					vscode.DiagnosticSeverity.Error
-				);
-			}));
-			function* getErrors(program: any): Generator<Expression | Statement> {
-				switch (typeof program) {
-					case 'object':
-						if (program.error)
-							yield <Expression | Statement>program;
-						for (var key in program)
-							yield* getErrors(program[key]);
-				}
-			}
+			diagnostics.set(document.uri, [...traverse(program)]
+				.filter(program => (<Annotated<Expression | Statement>>program).error)
+				.map(program => {
+					var annotated = <Annotated<Expression | Statement>>program;
+					var source = annotated.node.source;
+					return new vscode.Diagnostic(
+						new vscode.Range(document.positionAt(source.startIdx), document.positionAt(source.endIdx)),
+						annotated.error.message,
+						vscode.DiagnosticSeverity.Error
+					);
+				})
+			);
 		} else {
 			var [line, col, message] = parseErrorMessage(error!.matchResult.shortMessage!);
 			var position = new vscode.Position(line - 1, col - 1);
