@@ -22,4 +22,4 @@ export function activateDefinition(context: vscode.ExtensionContext) {
 			}
 		})
 	);
-};
+}

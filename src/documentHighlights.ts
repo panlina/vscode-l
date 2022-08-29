@@ -23,4 +23,4 @@ export function activateDocumentHighlights(context: vscode.ExtensionContext) {
 			}
 		})
 	);
-};
+}

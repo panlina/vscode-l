@@ -29,4 +29,4 @@ export function activateDocumentSymbols(context: vscode.ExtensionContext) {
 			}
 		})
 	);
-};
+}

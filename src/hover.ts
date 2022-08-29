@@ -23,4 +23,4 @@ export function activateHover(context: vscode.ExtensionContext) {
 			}
 		})
 	);
-};
+}

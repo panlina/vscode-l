@@ -59,4 +59,4 @@ export function activateDiagnostic(context: vscode.ExtensionContext) {
 			return [+line, +col, message] as [number, number, string];
 		}
 	}
-};
+}
