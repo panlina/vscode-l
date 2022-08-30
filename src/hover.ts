@@ -19,6 +19,14 @@ export function activateHover(context: vscode.ExtensionContext) {
 								]
 							};
 						}
+					} else {
+						var type: "variable" | "label" =
+							target.parent instanceof Statement.Var ? 'variable' : 'label';
+						return {
+							contents: [
+								`${type}: ${target.identifier}`
+							]
+						};
 					}
 			}
 		})
