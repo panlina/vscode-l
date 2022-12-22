@@ -7,16 +7,16 @@
 		{
 			"type": "mock",
 			"request": "launch",
-			"name": "Debug readme.md",
-			"program": "${workspaceFolder}/readme.md",
+			"name": "Debug index.l",
+			"program": "${workspaceFolder}/index.l",
 			"stopOnEntry": true,
 			"trace": false
 		},
 		{
 			"type": "mock",
 			"request": "attach",
-			"name": "Attach readme.md",
-			"program": "${workspaceFolder}/readme.md",
+			"name": "Attach index.l",
+			"program": "${workspaceFolder}/index.l",
 			"stopOnEntry": true,
 			"trace": false
 		}

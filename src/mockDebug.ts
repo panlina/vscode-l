@@ -18,8 +18,9 @@ import {
 } from '@vscode/debugadapter';
 import { DebugProtocol } from '@vscode/debugprotocol';
 import { basename } from 'path-browserify';
-import { MockRuntime, FileAccessor } from './mockRuntime';
+import { FileAccessor } from './mockRuntime';
 import { Subject } from 'await-notify';
+import { Machine, Environment, Scope, Expression, Annotated, parse, Statement } from "l";
 
 /**
  * This interface describes the mock-debug specific launch attributes
@@ -48,36 +49,24 @@ export class MockDebugSession extends LoggingDebugSession {
 	// we don't support multiple threads, so we can use a hardcoded ID for the default thread
 	private static threadID = 1;
 
-	// a Mock runtime (or debugger)
-	private _runtime: MockRuntime;
+	private machine: Machine;
+	private session?: Machine.Session;
+	private source?: string;
 
 	private _configurationDone = new Subject();
-
-	private _addressesInHex = true;
 
 	/**
 	 * Creates a new debug adapter that is used for one debug session.
 	 * We configure the default implementation of a debug adapter here.
 	 */
-	public constructor(fileAccessor: FileAccessor) {
+	public constructor(private fileAccessor: FileAccessor) {
 		super("mock-debug.txt");
 
 		// this debugger uses zero-based lines and columns
 		this.setDebuggerLinesStartAt1(false);
 		this.setDebuggerColumnsStartAt1(false);
 
-		this._runtime = new MockRuntime(fileAccessor);
-
-		// setup event handlers
-		this._runtime.on('stopOnEntry', () => {
-			this.sendEvent(new StoppedEvent('entry', MockDebugSession.threadID));
-		});
-		this._runtime.on('stopOnStep', () => {
-			this.sendEvent(new StoppedEvent('step', MockDebugSession.threadID));
-		});
-		this._runtime.on('end', () => {
-			this.sendEvent(new TerminatedEvent());
-		});
+		this.machine = new Machine(new Environment(new Scope({})));
 	}
 
 	/**
@@ -128,7 +117,24 @@ export class MockDebugSession extends LoggingDebugSession {
 		await this._configurationDone.wait(1000);
 
 		// start the program in the runtime
-		await this._runtime.start(args.program, !!args.stopOnEntry, !args.noDebug);
+		this.source = args.program;
+		var program = parse(new TextDecoder().decode(await this.fileAccessor.readFile(this.source!)));
+		this.session = this.machine.run(program);
+		if (!args.noDebug) {
+			if (args.stopOnEntry) {
+				if (!this.session!.step())
+					this.sendEvent(new StoppedEvent('entry', MockDebugSession.threadID));
+				else
+					this.sendEvent(new TerminatedEvent());
+			} else {
+				// we just start to run until we hit a breakpoint, an exception, or the end of the program
+				while (!this.session!.step());
+				this.sendEvent(new TerminatedEvent());
+			}
+		} else {
+			while (!this.session!.step());
+			this.sendEvent(new TerminatedEvent());
+		}
 
 		if (args.compileError) {
 			// simulate a compile/build error in "launch" request:
@@ -150,63 +156,47 @@ export class MockDebugSession extends LoggingDebugSession {
 		response.body = {
 			threads: [
 				new Thread(MockDebugSession.threadID, "thread 1"),
-				new Thread(MockDebugSession.threadID + 1, "thread 2"),
 			]
 		};
 		this.sendResponse(response);
 	}
 
 	protected stackTraceRequest(response: DebugProtocol.StackTraceResponse, args: DebugProtocol.StackTraceArguments): void {
-
-		const startFrame = typeof args.startFrame === 'number' ? args.startFrame : 0;
-		const maxLevels = typeof args.levels === 'number' ? args.levels : 1000;
-		const endFrame = startFrame + maxLevels;
-
-		const stk = this._runtime.stack(startFrame, endFrame);
-
+		var current = <Annotated<Expression | Statement>>this.session!.current;
+		var source = current.node.source;
+		var [, line, col] = source.getLineAndColumnMessage().match(/^Line (\d+), col (\d+):/)!;
 		response.body = {
-			stackFrames: stk.frames.map((f, ix) => {
-				const sf: DebugProtocol.StackFrame = new StackFrame(f.index, f.name, this.createSource(f.file), this.convertDebuggerLineToClient(f.line));
-				if (typeof f.column === 'number') {
-					sf.column = this.convertDebuggerColumnToClient(f.column);
-				}
-				if (typeof f.instruction === 'number') {
-					const address = this.formatAddress(f.instruction);
-					sf.name = `${f.name} ${address}`;
-					sf.instructionPointerReference = address;
-				}
-
-				return sf;
-			}),
-			// 4 options for 'totalFrames':
-			//omit totalFrames property: 	// VS Code has to probe/guess. Should result in a max. of two requests
-			totalFrames: stk.count			// stk.count is the correct size, should result in a max. of two requests
-			//totalFrames: 1000000 			// not the correct size, should result in a max. of two requests
-			//totalFrames: endFrame + 20 	// dynamically increases the size with every requested chunk, results in paging
+			stackFrames: [new StackFrame(
+				0, current.type, this.createSource(this.source!), +line, +col
+			)],
+			totalFrames: 1
 		};
 		this.sendResponse(response);
 	}
 
 	protected continueRequest(response: DebugProtocol.ContinueResponse, args: DebugProtocol.ContinueArguments): void {
-		this._runtime.continue(false);
+		while (!this.session!.step());
+		this.sendEvent(new TerminatedEvent());
 		this.sendResponse(response);
 	}
 
 	protected nextRequest(response: DebugProtocol.NextResponse, args: DebugProtocol.NextArguments): void {
-		this._runtime.step(args.granularity === 'instruction', false);
+		if (!this.session!.step())
+			this.sendEvent(new StoppedEvent('step', MockDebugSession.threadID));
+		else
+			this.sendEvent(new TerminatedEvent());
 		this.sendResponse(response);
 	}
 
 	protected stepInRequest(response: DebugProtocol.StepInResponse, args: DebugProtocol.StepInArguments): void {
-		this._runtime.stepIn(args.targetId);
+		if (!this.session!.step())
+			this.sendEvent(new StoppedEvent('step', MockDebugSession.threadID));
+		else
+			this.sendEvent(new TerminatedEvent());
 		this.sendResponse(response);
 	}
 
 	//---- helpers
-
-	private formatAddress(x: number, pad = 8) {
-		return this._addressesInHex ? '0x' + x.toString(16).padStart(8, '0') : x.toString(10);
-	}
 
 	private createSource(filePath: string): Source {
 		return new Source(basename(filePath), this.convertDebuggerPathToClient(filePath), undefined, undefined, 'mock-adapter-data');

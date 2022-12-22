@@ -31,23 +31,23 @@
             "editor/title/run": [
                 {
                     "command": "extension.mock-debug.runEditorContents",
-                    "when": "resourceLangId == markdown",
+                    "when": "resourceLangId == l",
                     "group": "navigation@1"
                 },
                 {
                     "command": "extension.mock-debug.debugEditorContents",
-                    "when": "resourceLangId == markdown",
+                    "when": "resourceLangId == l",
                     "group": "navigation@2"
                 }
             ],
             "commandPalette": [
                 {
                     "command": "extension.mock-debug.debugEditorContents",
-                    "when": "resourceLangId == markdown"
+                    "when": "resourceLangId == l"
                 },
                 {
                     "command": "extension.mock-debug.runEditorContents",
-                    "when": "resourceLangId == markdown"
+                    "when": "resourceLangId == l"
                 }
             ],
             "debug/variables/context": [
@@ -79,14 +79,14 @@
         ],
         "breakpoints": [
             {
-                "language": "markdown"
+                "language": "l"
             }
         ],
         "debuggers": [
             {
                 "type": "mock",
                 "languages": [
-                    "markdown"
+                    "l"
                 ],
                 "label": "Mock Debug",
                 "program": "./out/debugAdapter.js",
@@ -177,7 +177,7 @@
                 "configurationSnippets": [
                     {
                         "label": "Mock Debug: Launch",
-                        "description": "A new configuration for 'debugging' a user selected markdown file.",
+                        "description": "A new configuration for 'debugging' a user selected l file.",
                         "body": {
                             "type": "mock",
                             "request": "launch",
