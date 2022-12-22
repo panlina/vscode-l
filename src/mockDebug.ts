@@ -10,6 +10,7 @@
  * The most important class of the Debug Adapter is the MockDebugSession which implements many DAP requests by talking to the MockRuntime.
  */
 
+import { promises as fs } from 'fs';
 import {
 	Logger, logger,
 	LoggingDebugSession,
@@ -18,7 +19,6 @@ import {
 } from '@vscode/debugadapter';
 import { DebugProtocol } from '@vscode/debugprotocol';
 import { basename } from 'path-browserify';
-import { FileAccessor } from './mockRuntime';
 import { Subject } from 'await-notify';
 import { Machine, Environment, Scope, Expression, Annotated, parse, Statement } from "l";
 
@@ -59,7 +59,7 @@ export class MockDebugSession extends LoggingDebugSession {
 	 * Creates a new debug adapter that is used for one debug session.
 	 * We configure the default implementation of a debug adapter here.
 	 */
-	public constructor(private fileAccessor: FileAccessor) {
+	public constructor() {
 		super("mock-debug.txt");
 
 		// this debugger uses zero-based lines and columns
@@ -118,7 +118,7 @@ export class MockDebugSession extends LoggingDebugSession {
 
 		// start the program in the runtime
 		this.source = args.program;
-		var program = parse(new TextDecoder().decode(await this.fileAccessor.readFile(this.source!)));
+		var program = parse(await fs.readFile(this.source!, 'utf8'));
 		this.session = this.machine.run(program);
 		if (!args.noDebug) {
 			if (args.stopOnEntry) {
