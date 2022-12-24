@@ -1,4 +1,4 @@
+var succ;
+let succ = (x => x + 1);
 var a;
-let a = 1;
-var b;
-let b = a + 1;
+let a = succ 0;

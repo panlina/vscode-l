@@ -162,14 +162,17 @@ export class MockDebugSession extends LoggingDebugSession {
 	}
 
 	protected stackTraceRequest(response: DebugProtocol.StackTraceResponse, args: DebugProtocol.StackTraceArguments): void {
-		var current = <Annotated<Expression | Statement>>this.session!.current;
-		var source = current.node.source;
-		var [, line, col] = source.getLineAndColumnMessage().match(/^Line (\d+), col (\d+):/)!;
 		response.body = {
-			stackFrames: [new StackFrame(
-				0, current.type, this.createSource(this.source!), +line, +col
-			)],
-			totalFrames: 1
+			stackFrames: [
+				this.session!.current,
+				...this.session!.callstack
+			].map((program, i) => {
+				var [, line, col] = (<Annotated<Expression | Statement>>program).node.source.getLineAndColumnMessage().match(/^Line (\d+), col (\d+):/)!;
+				return new StackFrame(
+					i, `(function)`, this.createSource(this.source!), +line, +col
+				);
+			}),
+			totalFrames: this.session!.callstack.length + 1
 		};
 		this.sendResponse(response);
 	}
