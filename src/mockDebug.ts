@@ -50,7 +50,6 @@ export class MockDebugSession extends LoggingDebugSession {
 	private static threadID = 1;
 
 	private machine: Machine;
-	private session?: Machine.Session;
 	private source?: string;
 
 	private _configurationDone = new Subject();
@@ -119,20 +118,20 @@ export class MockDebugSession extends LoggingDebugSession {
 		// start the program in the runtime
 		this.source = args.program;
 		var program = parse(await fs.readFile(this.source!, 'utf8'));
-		this.session = this.machine.run(program);
+		this.machine.run(program);
 		if (!args.noDebug) {
 			if (args.stopOnEntry) {
-				if (!this.session!.step())
+				if (!this.machine.step())
 					this.sendEvent(new StoppedEvent('entry', MockDebugSession.threadID));
 				else
 					this.sendEvent(new TerminatedEvent());
 			} else {
 				// we just start to run until we hit a breakpoint, an exception, or the end of the program
-				while (!this.session!.step());
+				while (!this.machine.step());
 				this.sendEvent(new TerminatedEvent());
 			}
 		} else {
-			while (!this.session!.step());
+			while (!this.machine.step());
 			this.sendEvent(new TerminatedEvent());
 		}
 
@@ -164,27 +163,27 @@ export class MockDebugSession extends LoggingDebugSession {
 	protected stackTraceRequest(response: DebugProtocol.StackTraceResponse, args: DebugProtocol.StackTraceArguments): void {
 		response.body = {
 			stackFrames: [
-				this.session!.current,
-				...this.session!.callstack
+				this.machine.current,
+				...this.machine.callstack
 			].map((program, i) => {
 				var [, line, col] = (<Annotated<Expression | Statement>>program).node.source.getLineAndColumnMessage().match(/^Line (\d+), col (\d+):/)!;
 				return new StackFrame(
 					i, `(function)`, this.createSource(this.source!), +line, +col
 				);
 			}),
-			totalFrames: this.session!.callstack.length + 1
+			totalFrames: this.machine.callstack.length + 1
 		};
 		this.sendResponse(response);
 	}
 
 	protected continueRequest(response: DebugProtocol.ContinueResponse, args: DebugProtocol.ContinueArguments): void {
-		while (!this.session!.step());
+		while (!this.machine.step());
 		this.sendEvent(new TerminatedEvent());
 		this.sendResponse(response);
 	}
 
 	protected nextRequest(response: DebugProtocol.NextResponse, args: DebugProtocol.NextArguments): void {
-		if (!this.session!.step())
+		if (!this.machine.step())
 			this.sendEvent(new StoppedEvent('step', MockDebugSession.threadID));
 		else
 			this.sendEvent(new TerminatedEvent());
@@ -192,7 +191,7 @@ export class MockDebugSession extends LoggingDebugSession {
 	}
 
 	protected stepInRequest(response: DebugProtocol.StepInResponse, args: DebugProtocol.StepInArguments): void {
-		if (!this.session!.step())
+		if (!this.machine.step())
 			this.sendEvent(new StoppedEvent('step', MockDebugSession.threadID));
 		else
 			this.sendEvent(new TerminatedEvent());
