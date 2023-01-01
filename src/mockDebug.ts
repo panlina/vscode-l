@@ -15,12 +15,12 @@ import {
 	Logger, logger,
 	LoggingDebugSession,
 	InitializedEvent, TerminatedEvent, StoppedEvent,
-	Thread, StackFrame, Source
+	Thread, StackFrame, Scope as DAPScope, Source, Handles
 } from '@vscode/debugadapter';
 import { DebugProtocol } from '@vscode/debugprotocol';
 import { basename } from 'path-browserify';
 import { Subject } from 'await-notify';
-import { Machine, Environment, Scope, Expression, Annotated, parse, Statement } from "l";
+import { Machine, Environment, Scope, Expression, Annotated, parse, Statement, Value } from "l";
 
 /**
  * This interface describes the mock-debug specific launch attributes
@@ -51,6 +51,8 @@ export class MockDebugSession extends LoggingDebugSession {
 
 	private machine: Machine;
 	private source?: string;
+
+	private _variableHandles = new Handles<Scope<Value>>();
 
 	private _configurationDone = new Subject();
 
@@ -173,6 +175,41 @@ export class MockDebugSession extends LoggingDebugSession {
 		this.sendResponse(response);
 	}
 
+	protected scopesRequest(response: DebugProtocol.ScopesResponse, args: DebugProtocol.ScopesArguments): void {
+
+		var environment = this.machine.callStack[args.frameId].environment;
+		var scopes: DAPScope[] = [];
+		var e = environment;
+		for (; ;) {
+			scopes.push(new DAPScope('Locals', this._variableHandles.create(e.scope), false));
+			if (e.parent)
+				e = e.parent;
+			else
+				break;
+		}
+		response.body = {
+			scopes: scopes
+		};
+		this.sendResponse(response);
+	}
+
+	protected async variablesRequest(response: DebugProtocol.VariablesResponse, args: DebugProtocol.VariablesArguments, request?: DebugProtocol.Request): Promise<void> {
+
+		var scope = this._variableHandles.get(args.variablesReference);
+		var variables = Object.entries(scope.name);
+
+		// TODO: support child values
+
+		response.body = {
+			variables: variables.map(([name, value]) => ({
+				name: name,
+				value: this.renderValue(value),
+				variablesReference: 0
+			}))
+		};
+		this.sendResponse(response);
+	}
+
 	protected continueRequest(response: DebugProtocol.ContinueResponse, args: DebugProtocol.ContinueArguments): void {
 		while (!this.machine.step());
 		this.sendEvent(new TerminatedEvent());
@@ -196,6 +233,18 @@ export class MockDebugSession extends LoggingDebugSession {
 	}
 
 	//---- helpers
+
+	private renderValue(value: Value): string {
+		switch (value.type) {
+			case 'undefined': return `#${undefined}`;
+			case 'null': return `#${null}`;
+			case 'boolean': return `#${(<Value.Boolean>value).value}`;
+			case 'number': return JSON.stringify((<Value.Number>value).value);
+			case 'string': return JSON.stringify((<Value.String>value).value);
+			case 'function': return 'function';
+			default: return '';
+		}
+	}
 
 	private createSource(filePath: string): Source {
 		return new Source(basename(filePath), this.convertDebuggerPathToClient(filePath), undefined, undefined, 'mock-adapter-data');
