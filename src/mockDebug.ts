@@ -52,7 +52,7 @@ export class MockDebugSession extends LoggingDebugSession {
 	private machine: Machine;
 	private source?: string;
 
-	private _variableHandles = new Handles<Scope<Value>>();
+	private _variableHandles = new Handles<Scope<Value> | Value>();
 
 	private _configurationDone = new Subject();
 
@@ -196,15 +196,38 @@ export class MockDebugSession extends LoggingDebugSession {
 	protected async variablesRequest(response: DebugProtocol.VariablesResponse, args: DebugProtocol.VariablesArguments, request?: DebugProtocol.Request): Promise<void> {
 
 		var scope = this._variableHandles.get(args.variablesReference);
-		var variables = Object.entries(scope.name);
+		if (scope instanceof Scope<Value>)
+			var variables = Object.entries(scope.name);
+		else {
+			var value = scope;
+			switch (value.type) {
+				case 'array':
+					var variables = (<Value.Array>value).element.map(
+						(element, i) => [i.toString(), element] as [string, Value]
+					);
+					break;
+				case 'tuple':
+					var variables = (<Value.Tuple>value).element.map(
+						(element, i) => [i.toString(), element] as [string, Value]
+					);
+					break;
+				case 'object':
+					var variables = Object.entries((<Value.Object>value).property).map(
+						([name, value]) => [name, value] as [string, Value]
+					);
+					break;
+				default:
+					var variables: [string, Value][] = [];
+			}
+		}
 
-		// TODO: support child values
+		// TODO: support function values
 
 		response.body = {
 			variables: variables.map(([name, value]) => ({
 				name: name,
 				value: this.renderValue(value),
-				variablesReference: 0
+				variablesReference: ['array', 'tuple', 'object'].includes(value.type) ? this._variableHandles.create(value) : 0
 			}))
 		};
 		this.sendResponse(response);
@@ -241,6 +264,9 @@ export class MockDebugSession extends LoggingDebugSession {
 			case 'boolean': return `#${(<Value.Boolean>value).value}`;
 			case 'number': return JSON.stringify((<Value.Number>value).value);
 			case 'string': return JSON.stringify((<Value.String>value).value);
+			case 'array': return 'array';
+			case 'tuple': return 'tuple';
+			case 'object': return 'object';
 			case 'function': return 'function';
 			default: return '';
 		}
