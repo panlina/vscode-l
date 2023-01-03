@@ -52,7 +52,7 @@ export class MockDebugSession extends LoggingDebugSession {
 	private machine: Machine;
 	private source?: string;
 
-	private _variableHandles = new Handles<Scope<Value> | Value>();
+	private _variableHandles = new Handles<Scope<Value> | Value | Environment<Value>>();
 
 	private _configurationDone = new Subject();
 
@@ -195,39 +195,63 @@ export class MockDebugSession extends LoggingDebugSession {
 
 	protected async variablesRequest(response: DebugProtocol.VariablesResponse, args: DebugProtocol.VariablesArguments, request?: DebugProtocol.Request): Promise<void> {
 
+		var variables: [string, Value | Scope<Value> | Environment<Value>][];
 		var scope = this._variableHandles.get(args.variablesReference);
 		if (scope instanceof Scope<Value>)
-			var variables = Object.entries(scope.name);
-		else {
+			var variables = Object.entries(scope.name) as typeof variables;
+		else if (scope instanceof Environment<Value>) {
+			var scopes: Scope<Value>[] = [];
+			var e = scope;
+			for (; ;) {
+				scopes.push(e.scope);
+				if (e.parent)
+					e = e.parent;
+				else
+					break;
+			}
+			var variables = scopes.map(
+				(scope, i) => [i.toString(), scope] as [string, Scope<Value>]
+			) as typeof variables;
+		} else {
 			var value = scope;
 			switch (value.type) {
 				case 'array':
 					var variables = (<Value.Array>value).element.map(
-						(element, i) => [i.toString(), element] as [string, Value]
-					);
+						(element, i) => [i.toString(), element]
+					) as typeof variables;
 					break;
 				case 'tuple':
 					var variables = (<Value.Tuple>value).element.map(
-						(element, i) => [i.toString(), element] as [string, Value]
-					);
+						(element, i) => [i.toString(), element]
+					) as typeof variables;
 					break;
 				case 'object':
 					var variables = Object.entries((<Value.Object>value).property).map(
-						([name, value]) => [name, value] as [string, Value]
-					);
+						([name, value]) => [name, value]
+					) as typeof variables;
+					break;
+				case 'function':
+					var variables = [
+						['[[environment]]', (<Value.Function>value).environment]
+					] as typeof variables;
 					break;
 				default:
-					var variables: [string, Value][] = [];
+					var variables: typeof variables = [];
 			}
 		}
-
-		// TODO: support function values
 
 		response.body = {
 			variables: variables.map(([name, value]) => ({
 				name: name,
 				value: this.renderValue(value),
-				variablesReference: ['array', 'tuple', 'object'].includes(value.type) ? this._variableHandles.create(value) : 0
+				variablesReference:
+					(value instanceof Environment<Value>)
+					||
+					(value instanceof Scope<Value>)
+					||
+					['array', 'tuple', 'object', 'function'].includes(value.type) ?
+						this._variableHandles.create(value) :
+						0
 			}))
 		};
 		this.sendResponse(response);
@@ -257,19 +281,24 @@ export class MockDebugSession extends LoggingDebugSession {
 
 	//---- helpers
 
-	private renderValue(value: Value): string {
-		switch (value.type) {
-			case 'undefined': return `#${undefined}`;
-			case 'null': return `#${null}`;
-			case 'boolean': return `#${(<Value.Boolean>value).value}`;
-			case 'number': return JSON.stringify((<Value.Number>value).value);
-			case 'string': return JSON.stringify((<Value.String>value).value);
-			case 'array': return 'array';
-			case 'tuple': return 'tuple';
-			case 'object': return 'object';
-			case 'function': return 'function';
-			default: return '';
-		}
+	private renderValue(value: Value | Scope<Value> | Environment<Value>): string {
+		if (value instanceof Value)
+			switch (value.type) {
+				case 'undefined': return `#${undefined}`;
+				case 'null': return `#${null}`;
+				case 'boolean': return `#${(<Value.Boolean>value).value}`;
+				case 'number': return JSON.stringify((<Value.Number>value).value);
+				case 'string': return JSON.stringify((<Value.String>value).value);
+				case 'array': return 'array';
+				case 'tuple': return 'tuple';
+				case 'object': return 'object';
+				case 'function': return 'function';
+				default: return '';
+			}
+		else if (value instanceof Scope<Value>)
+			return 'scope';
+		else
+			return 'environment';
 	}
 
 	private createSource(filePath: string): Source {
