@@ -179,14 +179,8 @@ export class MockDebugSession extends LoggingDebugSession {
 
 		var environment = this.machine.callStack[args.frameId].environment;
 		var scopes: DAPScope[] = [];
-		var e = environment;
-		for (; ;) {
-			scopes.push(new DAPScope('Locals', this._variableHandles.create(e.scope), false));
-			if (e.parent)
-				e = e.parent;
-			else
-				break;
-		}
+		for (var scope of environment)
+			scopes.push(new DAPScope('Locals', this._variableHandles.create(scope), false));
 		response.body = {
 			scopes: scopes
 		};
@@ -200,15 +194,7 @@ export class MockDebugSession extends LoggingDebugSession {
 		if (scope instanceof Scope<Value>)
 			var variables = Object.entries(scope.name) as typeof variables;
 		else if (scope instanceof Environment<Value>) {
-			var scopes: Scope<Value>[] = [];
-			var e = scope;
-			for (; ;) {
-				scopes.push(e.scope);
-				if (e.parent)
-					e = e.parent;
-				else
-					break;
-			}
+			var scopes: Scope<Value>[] = [...scope];
 			var variables = scopes.map(
 				(scope, i) => [i.toString(), scope] as [string, Scope<Value>]
 			) as typeof variables;
