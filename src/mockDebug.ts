@@ -190,16 +190,18 @@ export class MockDebugSession extends LoggingDebugSession {
 	protected async variablesRequest(response: DebugProtocol.VariablesResponse, args: DebugProtocol.VariablesArguments, request?: DebugProtocol.Request): Promise<void> {
 
 		var variables: [string, Value | Scope<Value> | Environment<Value>][];
-		var scope = this._variableHandles.get(args.variablesReference);
-		if (scope instanceof Scope<Value>)
+		var variable = this._variableHandles.get(args.variablesReference);
+		if (variable instanceof Scope<Value>) {
+			var scope = variable;
 			var variables = Object.entries(scope.name) as typeof variables;
-		else if (scope instanceof Environment<Value>) {
-			var scopes: Scope<Value>[] = [...scope];
+		} else if (variable instanceof Environment<Value>) {
+			var environment = variable;
+			var scopes: Scope<Value>[] = [...environment];
 			var variables = scopes.map(
 				(scope, i) => [i.toString(), scope] as [string, Scope<Value>]
 			) as typeof variables;
 		} else {
-			var value = scope;
+			var value = variable;
 			switch (value.type) {
 				case 'array':
 					var variables = (<Value.Array>value).element.map(
